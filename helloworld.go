@@ -36,21 +36,25 @@ var globalMap = map[string][]string{
 	"9597A0EE8282571A2379FB006F5E4AE6": []string{"15059546210", "林燕玉"},
 	"D66096A73F66A082779A5A9CDB1186F2": []string{"18960432226", "何培铭"},
 	"AC3FCFBA3C0753DF61838A95088F2A98": []string{"13559506500", "何培铭"},
+	"89EA9514F00FA7A28A8EFD1397740B9D": []string{"13505918710", "苏添花"},
+	"D2A8E4860A74B7B46A2B3B7855802FEC": []string{"15280286253", "林望琛"},
 	"30BC02C5F03D869EDA4F989287435AA2": []string{"15959534510", "苏丽娇"},
 	"A621754E276E560F838891D0760E737E": []string{"15260500473", "王銮坚"},
 	"7B28820E41C35B78E8A7A464FE489128": []string{"18859909987", "谢玮琼"},
-	"D2A8E4860A74B7B46A2B3B7855802FEC": []string{"15280286253", "林望琛"},
 }
+
+const mTopicId int64 = 1950646711
 
 func main() {
 	userIds := []string{
 		"9597A0EE8282571A2379FB006F5E4AE6", // 姐
 		"D66096A73F66A082779A5A9CDB1186F2", // 冻冻冻
 		"AC3FCFBA3C0753DF61838A95088F2A98", // 京文
+		"89EA9514F00FA7A28A8EFD1397740B9D", // 妈
+		"D2A8E4860A74B7B46A2B3B7855802FEC", // 我
 		"30BC02C5F03D869EDA4F989287435AA2", // 丽娇
 		"A621754E276E560F838891D0760E737E", // 王銮坚
 		"7B28820E41C35B78E8A7A464FE489128", // piscees
-		"D2A8E4860A74B7B46A2B3B7855802FEC", // 我
 	}
 
 	// 获取当前时间
@@ -172,7 +176,8 @@ func toGetCoupon(token string, userId string) {
 
 	//--------------------------------------
 	//创建消费券列表请求
-	reqConsume, err := http.NewRequest("GET", "https://live-marketapi.vzan.com/api/v1/coupon/getmenucouponlist?topicId=399570611", nil)
+	couponListUrl := fmt.Sprintf("https://live-marketapi.vzan.com/api/v1/coupon/getmenucouponlist?topicId=%d", mTopicId)
+	reqConsume, err := http.NewRequest("GET", couponListUrl, nil)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -204,9 +209,9 @@ func toGetCoupon(token string, userId string) {
 			"couponId":      couponId,
 			"getConditions": 0,
 			"isFromMenu":    true,
-			"sourceId":      856446069,
+			"sourceId":      mTopicId,
 			"sourceType":    1,
-			"topicId":       856446069,
+			"topicId":       mTopicId,
 			"userName":      name,
 			"userPhone":     iphone,
 			"zbId":          629144760,
