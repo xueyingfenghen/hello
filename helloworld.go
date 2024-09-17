@@ -34,44 +34,47 @@ type CouponInfo struct {
 
 var globalMap = map[string][]string{
 	"9597A0EE8282571A2379FB006F5E4AE6": []string{"15059546210", "林燕玉"},
-	"D66096A73F66A082779A5A9CDB1186F2": []string{"18960432226", "何培铭"},
-	"AC3FCFBA3C0753DF61838A95088F2A98": []string{"13559506500", "何培铭"},
+	"D66096A73F66A082779A5A9CDB1186F2": []string{"18960432226", "小何"},
+	"AC3FCFBA3C0753DF61838A95088F2A98": []string{"13559506500", "小何"},
 	"89EA9514F00FA7A28A8EFD1397740B9D": []string{"13505918710", "苏添花"},
 	"D2A8E4860A74B7B46A2B3B7855802FEC": []string{"15280286253", "林望琛"},
 	"30BC02C5F03D869EDA4F989287435AA2": []string{"15959534510", "苏丽娇"},
 	"A621754E276E560F838891D0760E737E": []string{"15260500473", "王銮坚"},
 	"7B28820E41C35B78E8A7A464FE489128": []string{"18859909987", "谢玮琼"},
+	"0CE92D8786B1EF68F5D66B85F53246A0": []string{"13615966669", "李燕玲"},
 }
 
-const mTopicId int64 = 1950646711
+// 按需求抢券，未配置放空为全抢
+var mRobCouponList = map[string][]int32{
+	"9597A0EE8282571A2379FB006F5E4AE6": []int32{100, 200, 400}, // 林燕玉
+	"D66096A73F66A082779A5A9CDB1186F2": []int32{200, 400},      // 小何
+	//"AC3FCFBA3C0753DF61838A95088F2A98": []int32{200, 400}, // 小何
+	//"89EA9514F00FA7A28A8EFD1397740B9D": []int32{},         // 苏添花
+	//"D2A8E4860A74B7B46A2B3B7855802FEC": []int32{},         // 林望琛
+	//"30BC02C5F03D869EDA4F989287435AA2": []int32{},         // 苏丽娇
+	//"A621754E276E560F838891D0760E737E": []int32{},         // 王銮坚
+	//"7B28820E41C35B78E8A7A464FE489128": []int32{},         // 谢玮琼
+	//"0CE92D8786B1EF68F5D66B85F53246A0": []int32{},         // 李燕玲
+}
+
+const mTopicId int64 = 1743043476
 
 func main() {
-	userIds := []string{
-		"9597A0EE8282571A2379FB006F5E4AE6", // 姐
-		"D66096A73F66A082779A5A9CDB1186F2", // 冻冻冻
-		"AC3FCFBA3C0753DF61838A95088F2A98", // 京文
-		"89EA9514F00FA7A28A8EFD1397740B9D", // 妈
-		"D2A8E4860A74B7B46A2B3B7855802FEC", // 我
-		"30BC02C5F03D869EDA4F989287435AA2", // 丽娇
-		"A621754E276E560F838891D0760E737E", // 王銮坚
-		"7B28820E41C35B78E8A7A464FE489128", // piscees
-	}
-
 	// 获取当前时间
 	now := time.Now()
 
 	// 计算距离下一个上午十点和下午三点的时间间隔
-	nextMorning := time.Date(now.Year(), now.Month(), now.Day(), 9, 59, 55, 0, now.Location())
+	nextMorning := time.Date(now.Year(), now.Month(), now.Day(), 8, 59, 55, 0, now.Location())
 	if now.After(nextMorning) {
 		nextMorning = nextMorning.Add(24 * time.Hour) // 下一个上午十点
 	}
 
-	nextAfternoon := time.Date(now.Year(), now.Month(), now.Day(), 14, 55, 0, 0, now.Location())
+	nextAfternoon := time.Date(now.Year(), now.Month(), now.Day(), 9, 59, 55, 0, now.Location())
 	if now.After(nextAfternoon) {
 		nextAfternoon = nextAfternoon.Add(24 * time.Hour) // 下一个下午三点
 	}
 
-	for _, v := range userIds {
+	for k, _ := range mRobCouponList {
 
 		// 启动定时器，每天上午十点执行一次
 		morningTimer := time.NewTimer(nextMorning.Sub(now))
@@ -86,7 +89,7 @@ func main() {
 				nextMorning = nextMorning.Add(24 * time.Hour)
 				morningTimer.Reset(nextMorning.Sub(time.Now()))
 			}
-		}(v)
+		}(k)
 
 		// 启动定时器，每天下午三点执行一次
 		afternoonTimer := time.NewTimer(nextAfternoon.Sub(now))
@@ -101,7 +104,7 @@ func main() {
 				nextAfternoon = nextAfternoon.Add(24 * time.Hour)
 				afternoonTimer.Reset(nextAfternoon.Sub(time.Now()))
 			}
-		}(v)
+		}(k)
 
 	}
 
@@ -174,6 +177,18 @@ func toGetCoupon(token string, userId string) {
 	iphone := globalMap[userId][0]
 	name := globalMap[userId][1]
 
+	// 抢的券码
+	robList, ok := mRobCouponList[userId]
+	if !ok {
+		return
+	}
+
+	robMap := make(map[int32]int32)
+	for _, v := range robList {
+		couponMoney := v * 100
+		robMap[couponMoney] = 1
+	}
+
 	//--------------------------------------
 	//创建消费券列表请求
 	couponListUrl := fmt.Sprintf("https://live-marketapi.vzan.com/api/v1/coupon/getmenucouponlist?topicId=%d", mTopicId)
@@ -187,6 +202,9 @@ func toGetCoupon(token string, userId string) {
 	defer respConsume.Body.Close()
 	// 回复内容
 	data := getDataObj(respConsume)
+	if data == nil {
+		return
+	}
 	// 有消费券的情况下，遍历消费券请求领取
 	var coupons []interface{}
 	if len(data["dataObj"].([]interface{})) > 0 {
@@ -202,6 +220,22 @@ func toGetCoupon(token string, userId string) {
 			fmt.Printf("coupon list value: %v\n", v)
 			continue
 		}
+
+		// 只抢有用券
+		if len(robMap) > 0 {
+			// 处理 couponMoney 断言并确保其为 int32 类型
+			couponMoney, ok := couponItem["couponMoney"].(float64) // 服务器返回可能是 float64
+			if !ok {
+				fmt.Println("Failed to get couponMoney")
+				continue
+			}
+
+			// 类型转换为 int32 与 robMap 匹配
+			if _, ok := robMap[int32(couponMoney)]; !ok {
+				continue
+			}
+		}
+
 		//fmt.Printf("coupon item: %v \n", v)
 		couponId := couponItem["couponId"]
 		fmt.Println("===========================couponId:", couponId, " curTime:", curTime)
@@ -231,6 +265,9 @@ func toGetCoupon(token string, userId string) {
 		}
 		setUrlHeader(reqCoupon, fmt.Sprintf("%v", token), userId)
 		respCoupon := sendReq(reqCoupon)
+		if respCoupon == nil {
+			continue
+		}
 		// 回复内容
 		data = getDataObj(respCoupon)
 		fmt.Println("---------success to get coupon:", data)
